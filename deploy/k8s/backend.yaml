@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paper-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paper-backend
+  template:
+    metadata:
+      labels:
+        app: paper-backend
+    spec:
+      containers:
+        - name: backend
+          image: paper-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: paper-secrets
+                  key: database_url
+            - name: REDIS_URL
+              value: redis://paper-redis:6379/0
+            - name: ADMIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: paper-secrets
+                  key: admin_api_key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paper-backend
+spec:
+  selector:
+    app: paper-backend
+  ports:
+    - port: 8000
+      targetPort: 8000

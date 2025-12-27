@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paper-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paper-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paper-postgres
+  template:
+    metadata:
+      labels:
+        app: paper-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: paper-secrets
+                  key: postgres_password
+            - name: POSTGRES_DB
+              value: papers
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: paper-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paper-postgres
+spec:
+  selector:
+    app: paper-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paper-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paper-redis
+  template:
+    metadata:
+      labels:
+        app: paper-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paper-redis
+spec:
+  selector:
+    app: paper-redis
+  ports:
+    - port: 6379
+      targetPort: 6379

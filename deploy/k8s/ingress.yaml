@@ -1,0 +1,18 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: paper-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`papers.local`) && PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: paper-backend
+          port: 8000
+    - match: Host(`papers.local`)
+      kind: Rule
+      services:
+        - name: paper-frontend
+          port: 80
