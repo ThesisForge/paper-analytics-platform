@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paper-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paper-frontend
+  template:
+    metadata:
+      labels:
+        app: paper-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: paper-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4173
+          env:
+            - name: VITE_API_BASE
+              value: http://paper-backend:8000/api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paper-frontend
+spec:
+  selector:
+    app: paper-frontend
+  ports:
+    - port: 80
+      targetPort: 4173
